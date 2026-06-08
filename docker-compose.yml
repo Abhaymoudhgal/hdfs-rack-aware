@@ -1,0 +1,206 @@
+networks:
+  rack1_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.1.0/24
+
+  rack2_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.2.0/24
+
+  hdfs_mgmt:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+services:
+
+  namenode:
+    image: apache/hadoop:3
+    container_name: hdfs_namenode
+    hostname: namenode
+    user: root
+
+    command: >
+      bash -c "
+        mkdir -p /tmp/hadoop-root/dfs/name &&
+        hdfs namenode -format -force -nonInteractive || true &&
+        hdfs namenode
+      "
+
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+
+    volumes:
+      - namenode_data:/tmp/hadoop-root/dfs/name
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+      - ./config/rack_topology.sh:/opt/hadoop/etc/hadoop/rack_topology.sh:ro
+
+    networks:
+      hdfs_mgmt:
+        ipv4_address: 172.20.0.2
+
+  datanode_r1n1:
+    image: apache/hadoop:3
+    container_name: hdfs_r1n1
+    hostname: rack1node1
+    user: root
+
+    command: >
+      sh -c "
+        mkdir -p /tmp/hadoop-root/dfs/data &&
+        hdfs datanode
+      "
+
+    volumes:
+      - r1n1_data:/tmp/hadoop-root/dfs/data
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+
+    networks:
+      rack1_net:
+        ipv4_address: 172.20.1.11
+      hdfs_mgmt:
+
+    depends_on:
+      - namenode
+
+  datanode_r1n2:
+    image: apache/hadoop:3
+    container_name: hdfs_r1n2
+    hostname: rack1node2
+    user: root
+
+    command: >
+      sh -c "
+        mkdir -p /tmp/hadoop-root/dfs/data &&
+        hdfs datanode
+      "
+
+    volumes:
+      - r1n2_data:/tmp/hadoop-root/dfs/data
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+
+    networks:
+      rack1_net:
+        ipv4_address: 172.20.1.12
+      hdfs_mgmt:
+
+    depends_on:
+      - namenode
+
+  datanode_r1n3:
+    image: apache/hadoop:3
+    container_name: hdfs_r1n3
+    hostname: rack1node3
+    user: root
+
+    command: >
+      sh -c "
+        mkdir -p /tmp/hadoop-root/dfs/data &&
+        hdfs datanode
+      "
+
+    volumes:
+      - r1n3_data:/tmp/hadoop-root/dfs/data
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+
+    networks:
+      rack1_net:
+        ipv4_address: 172.20.1.13
+      hdfs_mgmt:
+
+    depends_on:
+      - namenode
+
+  datanode_r2n1:
+    image: apache/hadoop:3
+    container_name: hdfs_r2n1
+    hostname: rack2node1
+    user: root
+
+    command: >
+      sh -c "
+        mkdir -p /tmp/hadoop-root/dfs/data &&
+        hdfs datanode
+      "
+
+    volumes:
+      - r2n1_data:/tmp/hadoop-root/dfs/data
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+
+    networks:
+      rack2_net:
+        ipv4_address: 172.20.2.11
+      hdfs_mgmt:
+
+    depends_on:
+      - namenode
+
+  datanode_r2n2:
+    image: apache/hadoop:3
+    container_name: hdfs_r2n2
+    hostname: rack2node2
+    user: root
+
+    command: >
+      sh -c "
+        mkdir -p /tmp/hadoop-root/dfs/data &&
+        hdfs datanode
+      "
+
+    volumes:
+      - r2n2_data:/tmp/hadoop-root/dfs/data
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+
+    networks:
+      rack2_net:
+        ipv4_address: 172.20.2.12
+      hdfs_mgmt:
+
+    depends_on:
+      - namenode
+
+  datanode_r2n3:
+    image: apache/hadoop:3
+    container_name: hdfs_r2n3
+    hostname: rack2node3
+    user: root
+
+    command: >
+      sh -c "
+        mkdir -p /tmp/hadoop-root/dfs/data &&
+        hdfs datanode
+      "
+
+    volumes:
+      - r2n3_data:/tmp/hadoop-root/dfs/data
+      - ./config/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml:ro
+      - ./config/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml:ro
+
+    networks:
+      rack2_net:
+        ipv4_address: 172.20.2.13
+      hdfs_mgmt:
+
+    depends_on:
+      - namenode
+
+volumes:
+  namenode_data:
+  r1n1_data:
+  r1n2_data:
+  r1n3_data:
+  r2n1_data:
+  r2n2_data:
+  r2n3_data:

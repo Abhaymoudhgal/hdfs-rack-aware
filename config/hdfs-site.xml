@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <property>
+    <name>dfs.replication</name>
+    <value>2</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.name.dir</name>
+    <value>file:///tmp/hadoop-root/dfs/name</value>
+  </property>
+
+  <property>
+    <name>dfs.datanode.data.dir</name>
+    <value>file:///tmp/hadoop-root/dfs/data</value>
+  </property>
+
+  <property>
+    <name>dfs.permissions.enabled</name>
+    <value>false</value>
+  </property>
+
+  <!-- Rack Awareness -->
+  <property>
+    <name>net.topology.script.file.name</name>
+    <value>/opt/hadoop/etc/hadoop/rack_topology.sh</value>
+  </property>
+
+  <property>
+    <name>net.topology.script.number.args</name>
+    <value>100</value>
+  </property>
+
+  <property>
+    <name>dfs.heartbeat.interval</name>
+    <value>3</value>
+  </property>
+
+  <property>
+      <name>dfs.namenode.heartbeat.recheck-interval</name>
+      <value>15000</value>
+  </property>
+
+</configuration>
