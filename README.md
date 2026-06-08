@@ -1,214 +1,195 @@
-# HDFS Rack-Aware File Placer 🗄️
+# HDFS Rack-Aware File Placer
 
-> **Hackathon — Distributed Systems Track**
-> Simulates HDFS rack-aware block placement across 2 racks × 3 nodes, with automatic re-replication after a full rack failure.
+A Python-based simulation of HDFS rack-aware block placement and replication.
 
----
+This project demonstrates how HDFS places replicas across multiple racks to improve fault tolerance and automatically re-replicates blocks after a rack failure.
 
-## Architecture
+## Problem Statement
 
-```
-          ┌─────────────── HDFS CLUSTER ──────────────────┐
-          │                                                │
-          │   ┌─────── RACK 1 ────────┐  ┌── RACK 2 ────┐ │
-          │   │  node1  node2  node3  │  │ node1  node2 │ │
-          │   │   [B0]  [B0]          │  │  [B1]  [B1] │ │
-          │   │   [B1]                │  │  [B2]  [B2] │ │
-          │   └───────────────────────┘  └─────────────┘ │
-          │                                                │
-          │         NameNode (Block Map + Rack Table)      │
-          └────────────────────────────────────────────────┘
+Design a custom file uploader that:
 
-  HDFS Rack-Aware Policy:
-  ┌──────────┬──────────────────────────────────────────────────────┐
-  │ Replica  │ Placement Rule                                       │
-  ├──────────┼──────────────────────────────────────────────────────┤
-  │  1st     │ Writer's rack (Rack 1) — least-loaded node           │
-  │  2nd     │ Different rack (Rack 2) — least-loaded node          │
-  │  3rd+    │ Same rack as 2nd, different node                     │
-  └──────────┴──────────────────────────────────────────────────────┘
-```
-
----
+* Accepts a file and replication factor.
+* Places replicas across two simulated racks (3 nodes per rack).
+* Survives a complete rack failure.
+* Automatically restores replication through re-replication.
+* Displays block placement and recovery information through a CLI.
 
 ## Features
 
-| Feature | Details |
-|---|---|
-| **Rack-aware placement** | HDFS policy: Replica 1 → Rack1, Replica 2 → Rack2, Replica 3+ → Rack2 |
-| **Load balancing** | Least-loaded node selection per rack |
-| **Rack failure simulation** | Kill any rack; all nodes marked dead instantly |
-| **Auto rebalance** | Missing blocks re-replicated to surviving rack |
-| **Persistence** | Cluster state saved to `data/hdfs_state.json` |
-| **Docker Compose** | Real 6-node HDFS cluster for HDFS CLI demo |
-| **Unit tests** | 20+ pytest tests covering placement, failure, recovery |
+* Rack-aware replica placement
+* Two racks with three nodes each
+* Configurable replication factor
+* Load-balanced node selection
+* Full rack failure simulation
+* Automatic block re-replication
+* Persistent cluster state
+* Command-line interface
+* Comprehensive unit tests
 
----
+## Cluster Topology
 
-## Quick Start
+```text
+RACK 1
+ ├── rack1:node1
+ ├── rack1:node2
+ └── rack1:node3
 
-### Option A — Python Simulator (No Docker)
+RACK 2
+ ├── rack2:node1
+ ├── rack2:node2
+ └── rack2:node3
+```
+
+## Placement Policy
+
+Replication Factor = 2
+
+```text
+Replica 1 → Rack 1
+Replica 2 → Rack 2
+```
+
+Replication Factor = 3
+
+```text
+Replica 1 → Rack 1
+Replica 2 → Rack 2
+Replica 3 → Different node on Rack 2
+```
+
+This ensures that data survives the failure of an entire rack.
+
+## Installation
 
 ```bash
-# Clone
-git clone https://github.com/<your-username>/hdfs-rack-aware.git
+git clone https://github.com/Abhaymoudhgal/hdfs-rack-aware.git
+
 cd hdfs-rack-aware
 
-# Install test deps
 pip install -r requirements.txt
-
-# Run the full demo
-chmod +x demo.sh
-./demo.sh
 ```
 
-### Option B — Real HDFS via Docker Compose
+## Usage
+
+### Reset Cluster
 
 ```bash
-# Start the cluster (NameNode + 6 DataNodes)
-docker compose up -d
-
-# Wait ~60s for all nodes to register
-docker exec hdfs_namenode hdfs dfsadmin -report
-
-# Run the HDFS CLI demo
-chmod +x scripts/hdfs_demo.sh
-./scripts/hdfs_demo.sh
+python src/rack_placer.py reset
 ```
 
----
-
-## CLI Reference
+### Upload File
 
 ```bash
-python3 src/rack_placer.py <command> [options]
+python src/rack_placer.py upload testfile.txt --replication 2
 ```
 
-| Command | Description |
-|---|---|
-| `status` | Show live cluster topology + stored files |
-| `upload <file> [-r RF]` | Upload file with rack-aware block placement |
-| `show-file <filename>` | Show all block locations for a file |
-| `kill-rack <1\|2>` | Simulate full rack failure + trigger rebalance |
-| `reset` | Clear all cluster state |
-
-### Examples
+### View File Placement
 
 ```bash
-# Upload a 256 MB file with RF=2
-python3 src/rack_placer.py upload mydata.csv --replication 2
-
-# Upload with RF=3
-python3 src/rack_placer.py upload archive.tar.gz -r 3
-
-# See block placement
-python3 src/rack_placer.py show-file mydata.csv
-
-# Cluster health
-python3 src/rack_placer.py status
-
-# Kill Rack 1 → triggers auto-rebalance
-python3 src/rack_placer.py kill-rack 1
-
-# Kill Rack 2
-python3 src/rack_placer.py kill-rack 2
+python src/rack_placer.py show-file testfile.txt
 ```
 
----
+### Simulate Rack Failure
 
-## Sample Output
-
-```
- ██╗  ██╗██████╗ ███████╗███████╗
- ...
-
-╔══════════════════════════════════════════╗
-║         CLUSTER TOPOLOGY                ║
-╚══════════════════════════════════════════╝
-
-  RACK 1  ● ONLINE
-  ──────────────────────────────────────────
-  ▶ rack1:node1  [████████░░░░░░░░░░░░]   512 MB / 4096 MB  (4 blocks)
-  ▶ rack1:node2  [████░░░░░░░░░░░░░░░░]   256 MB / 4096 MB  (2 blocks)
-  ▶ rack1:node3  [████░░░░░░░░░░░░░░░░]   256 MB / 4096 MB  (2 blocks)
-
-  RACK 2  ● ONLINE
-  ──────────────────────────────────────────
-  ▶ rack2:node1  [████████░░░░░░░░░░░░]   512 MB / 4096 MB  (4 blocks)
-  ▶ rack2:node2  [████░░░░░░░░░░░░░░░░]   256 MB / 4096 MB  (2 blocks)
-  ▶ rack2:node3  [░░░░░░░░░░░░░░░░░░░░]     0 MB / 4096 MB  (0 blocks)
+```bash
+python src/rack_placer.py kill-rack 1
 ```
 
----
+### View Cluster Status
+
+```bash
+python src/rack_placer.py status
+```
+
+## Example Workflow
+
+### Upload
+
+```bash
+python src/rack_placer.py upload testfile.txt --replication 2
+```
+
+Output:
+
+```text
+Block 0
+→ rack1:node1
+→ rack2:node1
+
+Fault Tolerance:
+✓ Survives full rack failure
+```
+
+### Rack Failure
+
+```bash
+python src/rack_placer.py kill-rack 1
+```
+
+Output:
+
+```text
+Dead replicas : rack1:node1
+New replicas  : rack2:node2
+Final locs    : rack2:node1 rack2:node2
+```
+
+### Verification
+
+```bash
+python src/rack_placer.py show-file testfile.txt
+```
+
+Output:
+
+```text
+Block 0
+→ rack2:node1
+→ rack2:node2
+```
+
+Replication factor is restored automatically.
 
 ## Running Tests
 
 ```bash
-# All tests with coverage
-python3 -m pytest tests/ -v --cov=src
-
-# Specific test class
-python3 -m pytest tests/ -v -k "TestFailureAndRebalance"
+python -m pytest tests/ -v
 ```
 
----
+Current test suite:
+
+```text
+21 passed
+```
 
 ## Project Structure
 
-```
+```text
 hdfs-rack-aware/
+│
 ├── src/
-│   └── rack_placer.py       ← Core simulator + CLI
+│   └── rack_placer.py
+│
 ├── tests/
-│   └── test_rack_placer.py  ← 20+ unit tests
-├── scripts/
-│   └── hdfs_demo.sh         ← Real HDFS CLI demo
-├── config/
-│   ├── hadoop.env           ← Hadoop config for Docker
-│   └── rack_topology.sh     ← IP → rack label mapping
-├── data/                    ← State + sample files (git-ignored)
-├── logs/                    ← Operation log (git-ignored)
-├── .github/workflows/ci.yml ← GitHub Actions CI
-├── docker-compose.yml       ← 6-node HDFS cluster
-├── demo.sh                  ← End-to-end demo
+│   └── test_rack_placer.py
+│
+├── data/
+│   └── sample_data.txt
+│
 ├── requirements.txt
-└── README.md
+├── README.md
+└── demo.sh
 ```
 
----
+## Technical Highlights
 
-## How Rack-Aware Placement Works
-
-```
-File: video.mp4  (256 MB → 2 blocks)  RF=2
-
-Block 0:
-  Rack 1, Node 1  ← 1st replica (writer's rack)
-  Rack 2, Node 1  ← 2nd replica (off-rack)
-
-Block 1:
-  Rack 1, Node 2  ← 1st replica
-  Rack 2, Node 2  ← 2nd replica
-
-RACK 1 DIES:
-  Block 0: only Rack2:Node1 alive → needs 1 more copy
-  Block 1: only Rack2:Node2 alive → needs 1 more copy
-
-AUTO-REBALANCE:
-  Block 0 → new copy at Rack2:Node3
-  Block 1 → new copy at Rack2:Node2 (or Node3)
-
-  ✓ All blocks back to RF=2 on surviving rack
-```
-
----
-
-## Team
-
-Built for the **Distributed Systems Hackathon** — HDFS Architecture Track.
-
----
+* Rack-aware replica placement
+* Fault-tolerant storage simulation
+* Re-replication after rack failure
+* Persistent metadata management
+* Python CLI implementation
+* Automated testing
 
 ## License
 
-MIT
+MIT License
