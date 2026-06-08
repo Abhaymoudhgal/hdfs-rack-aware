@@ -1,0 +1,85 @@
+{
+  "nodes": {
+    "rack1:node1": {
+      "rack_id": 1,
+      "node_id": 1,
+      "name": "rack1:node1",
+      "alive": false,
+      "blocks": [
+        "blk_99f86e1be6de_0000"
+      ],
+      "used_mb": 128,
+      "total_mb": 4096
+    },
+    "rack1:node2": {
+      "rack_id": 1,
+      "node_id": 2,
+      "name": "rack1:node2",
+      "alive": false,
+      "blocks": [],
+      "used_mb": 0,
+      "total_mb": 4096
+    },
+    "rack1:node3": {
+      "rack_id": 1,
+      "node_id": 3,
+      "name": "rack1:node3",
+      "alive": false,
+      "blocks": [],
+      "used_mb": 0,
+      "total_mb": 4096
+    },
+    "rack2:node1": {
+      "rack_id": 2,
+      "node_id": 1,
+      "name": "rack2:node1",
+      "alive": true,
+      "blocks": [
+        "blk_99f86e1be6de_0000"
+      ],
+      "used_mb": 128,
+      "total_mb": 4096
+    },
+    "rack2:node2": {
+      "rack_id": 2,
+      "node_id": 2,
+      "name": "rack2:node2",
+      "alive": true,
+      "blocks": [
+        "blk_99f86e1be6de_0000"
+      ],
+      "used_mb": 128,
+      "total_mb": 4096
+    },
+    "rack2:node3": {
+      "rack_id": 2,
+      "node_id": 3,
+      "name": "rack2:node3",
+      "alive": true,
+      "blocks": [],
+      "used_mb": 0,
+      "total_mb": 4096
+    }
+  },
+  "files": {
+    "testfile.txt": {
+      "filename": "testfile.txt",
+      "filepath": "testfile.txt",
+      "size_bytes": 16,
+      "size_mb": 0.0,
+      "num_blocks": 1,
+      "replication": 2,
+      "checksum": "99f86e1be6de",
+      "uploaded_at": "2026-06-08T18:05:33.596116",
+      "blocks": [
+        {
+          "block_id": "blk_99f86e1be6de_0000",
+          "locations": [
+            "rack2:node1",
+            "rack2:node2"
+          ]
+        }
+      ]
+    }
+  }
+}
